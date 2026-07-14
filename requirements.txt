@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+langgraph
+langchain
+langchain-openai
+pydantic
+pydantic-settings
+python-dotenv
+psycopg[binary,pool]
+langgraph-checkpoint-postgres
+mem0ai
