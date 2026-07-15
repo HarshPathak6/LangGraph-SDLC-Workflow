@@ -9,10 +9,18 @@ class SDLCState(TypedDict, total=False):
     # Initial input
     requirements: str
 
+    # General tracking
+    current_stage: str
+    
     # Requirements phase
     user_stories: str
+
+    # Product Owner Review 
     product_owner_review: str
     product_owner_status: str
+
+    # Loop tracking
+    product_owner_attempts: int
 
     # Design phase
     design_docs: str
@@ -40,5 +48,4 @@ class SDLCState(TypedDict, total=False):
     # Deployment
     deployment_result: str
 
-    # General tracking
-    current_stage: str
+    

@@ -1,106 +1,144 @@
-from langgraph.graph import StateGraph, START, END
+# from langgraph.graph import StateGraph, START, END
 
-from app.state import SDLCState
-from app.llm import llm
+# from app.state import SDLCState
+# from app.llm import llm
 
-def call_llm(prompt: str) -> str:
-    response = llm.invoke(prompt)
-    return response.content
+# def call_llm(prompt: str) -> str:
+#     response = llm.invoke(prompt)
+#     return response.content
 
 # =========================================================
 # REQUIREMENTS PHASE
 # =========================================================
 
-def generate_user_stories(state: SDLCState):
+from langgraph.graph import StateGraph, START, END
 
-    prompt = f"""
-You are a Business Analyst.
+from app.state import SDLCState
 
-Convert the following software requirements into detailed Agile user stories.
+from app.nodes.requirements import (
+    generate_user_stories,
+    product_owner_review,
+    revise_user_stories
+)
 
-For every user story include:
-- Title
-- As a...
-- I want...
-- So that...
-- Acceptance Criteria
+from app.nodes.design import (
+    create_design_docs
+)
 
-Requirements:
-{state["requirements"]}
-"""
-    
-    result = call_llm(prompt)
 
-    return {
-        "user_stories": result,
-        "current_stage": "product_owner_review"
-    }
+# =========================================================
+# ROUTING FUNCTION
+# =========================================================
 
-def product_owner_review(state: SDLCState):
+def route_product_owner_review(state: SDLCState):
+    """
+    Decides where the graph goes after
+    the Product Owner reviews the stories.
+    """
 
-    prompt = f"""
-You are a strict Product Owner.
+    if state["product_owner_status"] == "APPROVED":
+        return "create_design_docs"
 
-Review these user stories against the original requirements.
+    return "revise_user_stories"
 
-ORIGINAL REQUIREMENTS:
-{state["requirements"]}
 
-USER STORIES:
-{state["user_stories"]}
+# =========================================================
+# BUILD GRAPH
+# =========================================================
 
-Return your answer in exactly this format:
+def build_graph(checkpointer):
 
-STATUS: APPROVED
+    builder = StateGraph(SDLCState)
 
-FEEDBACK:
-Your feedback here
 
-OR:
+    # -----------------------------------------------------
+    # ADD NODES
+    # -----------------------------------------------------
 
-STATUS: FEEDBACK
-
-FEEDBACK:
-Explain exactly what must be improved.
-"""
-    
-    result = call_llm(prompt)
-
-    status = (
-        "APPROVED"
-        if "STATUS: APPROVED" in result.upper()
-        else "FEEDBACK"
+    builder.add_node(
+        "generate_user_stories",
+        generate_user_stories
     )
 
-    return {
-        "product_owner_review: result,"
-        "product_owner_status": status
-    }
+    builder.add_node(
+        "product_owner_review",
+        product_owner_review
+    )
 
-def revise_user_stories(state: SDLCState):
+    builder.add_node(
+        "revise_user_stories",
+        revise_user_stories
+    )
 
-    prompt = f"""
-You are a Business Analyst.
+    builder.add_node(
+        "create_design_docs",
+        create_design_docs
+    )
 
-Revise the user stories according to the Product Owner feedback.
 
-ORIGINAL REQUIREMENTS:
-{state["requirements"]}
+    # -----------------------------------------------------
+    # NORMAL EDGES
+    # -----------------------------------------------------
 
-CURRENT USER STORIES:
-{state["user_stories"]}
+    # START
+    #   ↓
+    # Generate User Stories
 
-PRODUCT OWNER FEEDBACK:
-{state["product_owner_review"]}
+    builder.add_edge(
+        START,
+        "generate_user_stories"
+    )
 
-Return the complete revised user stories.
-"""
-    
 
-    return {
-        "user_stories": call_llm(prompt)
-    }
+    # Generate User Stories
+    #   ↓
+    # Product Owner Review
 
-# =========================================================
-# DESIGN PHASE
-# =========================================================
+    builder.add_edge(
+        "generate_user_stories",
+        "product_owner_review"
+    )
+
+
+    # Revised User Stories
+    #   ↓
+    # Product Owner reviews them again
+
+    builder.add_edge(
+        "revise_user_stories",
+        "product_owner_review"
+    )
+
+
+    # Create Design Docs
+    #   ↓
+    # END for now
+
+    builder.add_edge(
+        "create_design_docs",
+        END
+    )
+
+
+    # -----------------------------------------------------
+    # CONDITIONAL EDGE
+    # -----------------------------------------------------
+
+    builder.add_conditional_edges(
+        "product_owner_review",
+        route_product_owner_review,
+        {
+            "create_design_docs": "create_design_docs",
+            "revise_user_stories": "revise_user_stories"
+        }
+    )
+
+
+    # -----------------------------------------------------
+    # COMPILE WITH NEON CHECKPOINTER
+    # -----------------------------------------------------
+
+    return builder.compile(
+        checkpointer=checkpointer
+    )
+
