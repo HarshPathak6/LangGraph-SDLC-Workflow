@@ -57,6 +57,7 @@ Return only the complete user stories.
 # =========================================================
 
 def product_owner_review(state: SDLCState):
+    print("Entered product_owner_review")
     """
     Reviews the generated user stories against
     the ORIGINAL user requirements.
@@ -112,9 +113,10 @@ Clearly explain:
 
 Do not approve incomplete user stories.
 """
-
+    print("Calling Product Owner LLM")
     response = llm.invoke(prompt)
 
+    print("Product Owner finished")
     review = response.content
 
     # Determine the routing status
@@ -164,6 +166,7 @@ PRODUCT OWNER REVIEW:
 
 IMPORTANT RULES:
 
+IMPORTANT NOTE: KEEP THE RESPONSE UNDER 300 WORDS.
 1. Fix every issue identified by the Product Owner.
 2. Add missing user stories if necessary.
 3. Improve existing stories if necessary.
@@ -191,7 +194,8 @@ Acceptance Criteria:
 
 Return only the complete revised user stories.
 """
-
+    print(len(prompt))
+    print(prompt[:500])
     response = llm.invoke(prompt)
 
     return {

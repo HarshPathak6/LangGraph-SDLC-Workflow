@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 from uuid import uuid4
-
+import traceback
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from langgraph.checkpoint.postgres import PostgresSaver
@@ -138,14 +138,13 @@ def requirements_to_stories(
     "product_owner_status": result.get("product_owner_status"),
     "product_owner_review": result.get("product_owner_review"),
     "product_owner_attempts": result.get("product_owner_attempts"),
-    "design_docs": result.get("design_docs")
+    "design_docs": result.get("design_docs"),
+    "generated_code": result.get("generated_code")
 }
 
-    except Exception as error:
-        raise HTTPException(
-            status_code=500,
-            detail=str(error)
-        )
+    except Exception:
+        traceback.print_exc()
+        raise
 
 
 #-------------------------------------------

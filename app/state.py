@@ -11,7 +11,7 @@ class SDLCState(TypedDict, total=False):
 
     # General tracking
     current_stage: str
-    
+
     # Requirements phase
     user_stories: str
 
@@ -19,13 +19,16 @@ class SDLCState(TypedDict, total=False):
     product_owner_review: str
     product_owner_status: str
 
-    # Loop tracking
+    # Product Owner Review Loop tracking
     product_owner_attempts: int
 
     # Design phase
     design_docs: str
-    design_review: str
-    design_status: str
+
+    # Design Review
+    design_review_status: str
+    design_review_feedback: str
+    design_review_attempts: int
 
     # Development phase
     generated_code: str

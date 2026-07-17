@@ -22,25 +22,30 @@ from app.nodes.requirements import (
 )
 
 from app.nodes.design import (
-    create_design_docs
+    create_design_docs,
+    review_design,
+    revise_design_docs
 )
 
+from app.nodes.development import generate_code
 
 # =========================================================
 # ROUTING FUNCTION
 # =========================================================
 
 def route_product_owner_review(state: SDLCState):
-    """
-    Decides where the graph goes after
-    the Product Owner reviews the stories.
-    """
 
     if state["product_owner_status"] == "APPROVED":
-        return "create_design_docs"
+        return "approved"
 
-    return "revise_user_stories"
+    return "needs_revision"
 
+def route_design_review(state: SDLCState):
+
+    if state.get("design_review_status") == "APPROVED":
+        return "approved"
+
+    return "needs_revision"
 
 # =========================================================
 # BUILD GRAPH
@@ -51,9 +56,9 @@ def build_graph(checkpointer):
     builder = StateGraph(SDLCState)
 
 
-    # -----------------------------------------------------
-    # ADD NODES
-    # -----------------------------------------------------
+# ==========================================================
+    # REQUIREMENTS PHASE
+    # ==========================================================
 
     builder.add_node(
         "generate_user_stories",
@@ -70,73 +75,97 @@ def build_graph(checkpointer):
         revise_user_stories
     )
 
+    # ==========================================================
+    # DESIGN PHASE
+    # ==========================================================
+
     builder.add_node(
         "create_design_docs",
         create_design_docs
     )
 
+    builder.add_node(
+        "design_review",
+        review_design
+    )
 
-    # -----------------------------------------------------
-    # NORMAL EDGES
-    # -----------------------------------------------------
+    builder.add_node(
+        "revise_design_docs",
+        revise_design_docs
+    )
 
+    # ==========================================================
+    # DEVELOPMENT PHASE
+    # ==========================================================
+
+    builder.add_node(
+        "generate_code",
+        generate_code
+    )
+
+    # ==========================================================
     # START
-    #   ↓
-    # Generate User Stories
+    # ==========================================================
 
     builder.add_edge(
         START,
         "generate_user_stories"
     )
 
-
-    # Generate User Stories
-    #   ↓
-    # Product Owner Review
+    # ==========================================================
+    # REQUIREMENTS LOOP
+    # ==========================================================
 
     builder.add_edge(
         "generate_user_stories",
         "product_owner_review"
     )
 
-
-    # Revised User Stories
-    #   ↓
-    # Product Owner reviews them again
+    builder.add_conditional_edges(
+        "product_owner_review",
+        route_product_owner_review,
+        {
+            "approved": "create_design_docs",
+            "needs_revision": "revise_user_stories"
+        }
+    )
 
     builder.add_edge(
         "revise_user_stories",
         "product_owner_review"
     )
 
-
-    # Create Design Docs
-    #   ↓
-    # END for now
+    # ==========================================================
+    # DESIGN LOOP
+    # ==========================================================
 
     builder.add_edge(
         "create_design_docs",
-        END
+        "design_review"
     )
 
-
-    # -----------------------------------------------------
-    # CONDITIONAL EDGE
-    # -----------------------------------------------------
-
     builder.add_conditional_edges(
-        "product_owner_review",
-        route_product_owner_review,
+        "design_review",
+        route_design_review,
         {
-            "create_design_docs": "create_design_docs",
-            "revise_user_stories": "revise_user_stories"
+            "approved": "generate_code",
+            "needs_revision": "revise_design_docs"
         }
     )
 
+    builder.add_edge(
+        "revise_design_docs",
+        "design_review"
+    )
 
-    # -----------------------------------------------------
-    # COMPILE WITH NEON CHECKPOINTER
-    # -----------------------------------------------------
+    # ==========================================================
+    # DEVELOPMENT
+    # ==========================================================
+
+    builder.add_edge(
+        "generate_code",
+        END
+    )
 
     return builder.compile(
         checkpointer=checkpointer
