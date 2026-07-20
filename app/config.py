@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     # GEMINI_MODEL: str
     # GROQ_MODEL: str
     # GROQ_API_KEY: str
+    MEM0_API_KEY: str
 
     model_config = SettingsConfigDict(
         env_file=".env",

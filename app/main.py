@@ -2,12 +2,13 @@ from contextlib import asynccontextmanager
 from uuid import uuid4
 import traceback
 from fastapi import FastAPI, HTTPException
+from httpx import request
 from pydantic import BaseModel
 from langgraph.checkpoint.postgres import PostgresSaver
 from psycopg_pool import ConnectionPool
 from app.config import settings
 from app.graph import build_graph
-
+from app.mem0_client import get_memory
 
 # This will hold the compiled LangGraph
 graph = None
@@ -84,14 +85,13 @@ def root():
 # PHASE 1 ENDPOINT
 #-------------------------------------------
 
-@app.post("/sdlc/requirements-to-stories")
+@app.post("/sdlc/user-requirements-to-project-development-and-deployment")
 def requirements_to_stories(
     request: RequirementsRequest
 ):
     """
-    Phase 1:
-    Converts software requirements into
-    Agile user stories using LangGraph.
+    SDLC Automation API Endpoint: Converts software requirements into
+    Agile user stories, generates code, and deploys the project using LangGraph.
     """
 
     if graph is None:
@@ -116,10 +116,25 @@ def requirements_to_stories(
     "recursion_limit": 25
 }
 
+    print("Retrieving memories...")
+
+    memory_context = get_memory(project_id)
+
+    print(memory_context)
+
+    requirements = f"""
+    Previous user preferences:
+
+    {memory_context}
+
+    Current project requirements:
+
+    {request.requirements}
+"""
     # Initial LangGraph state
     initial_state = {
         "project_id": project_id,
-        "requirements": request.requirements,
+        "requirements": requirements,
         "current_stage": "requirements_received"
     }
 
