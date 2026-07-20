@@ -39,7 +39,9 @@ class SDLCState(TypedDict, total=False):
 
     # Security phase
     security_review: str
-    security_status: str
+    security_review_feedback: str
+    security_review_status: str
+    security_review_attempts: int
 
     # Testing phase
     test_cases: str

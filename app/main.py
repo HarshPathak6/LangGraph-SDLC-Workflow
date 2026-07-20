@@ -113,7 +113,7 @@ def requirements_to_stories(
     "configurable": {
         "thread_id": project_id
     },
-    "recursion_limit": 10
+    "recursion_limit": 25
 }
 
     # Initial LangGraph state
@@ -185,3 +185,6 @@ def get_project_state(project_id: str):
         "project_id": project_id,
         "state": snapshot.values
     }
+
+
+

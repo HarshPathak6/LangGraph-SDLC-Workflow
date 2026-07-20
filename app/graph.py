@@ -18,7 +18,7 @@ from app.state import SDLCState
 from app.nodes.requirements import (
     generate_user_stories,
     product_owner_review,
-    revise_user_stories
+    revise_user_stories,
 )
 
 from app.nodes.design import (
@@ -27,7 +27,13 @@ from app.nodes.design import (
     revise_design_docs
 )
 
-from app.nodes.development import generate_code, code_review, fix_code_after_review
+from app.nodes.development import (
+    generate_code,
+    code_review,
+    fix_code_after_review,
+    security_review,
+    fix_code_after_security
+)
 
 # =========================================================
 # ROUTING FUNCTION
@@ -56,10 +62,30 @@ def route_design_review(state: SDLCState):
     print("Routing to revise_design_docs")
     return "needs_revision"
 
+
 def route_code_review(state: SDLCState):
 
-    if state["code_review_status"] == "APPROVED":
+    status = state.get("code_review_status", "")
+    
+    print("=" * 30)
+    print("CODE REVIEW STATUS:", status)
+    print("=" * 30)
 
+    if status == "APPROVED":
+        return "approved"
+
+    return "needs_revision"
+
+
+def route_security_review(state: SDLCState):
+
+    status = state.get("security_review_status", "")
+
+    print("=" * 30)
+    print("SECURITY REVIEW STATUS:", status)
+    print("=" * 30)
+
+    if status == "APPROVED":
         return "approved"
 
     return "needs_revision"
@@ -135,6 +161,18 @@ def build_graph(checkpointer):
     fix_code_after_review
 
 )
+    
+    builder.add_node(
+    "security_review",
+    security_review
+)
+
+    builder.add_node(
+    "fix_code_after_security",
+    fix_code_after_security
+)
+
+
     # ==========================================================
     # START
     # ==========================================================
@@ -210,9 +248,7 @@ def build_graph(checkpointer):
 
     {
 
-        # "approved":"security_review",
-        "approved":END,
-
+        "approved":"security_review",
 
         "needs_revision":"fix_code_after_review"
 
@@ -226,6 +262,21 @@ def build_graph(checkpointer):
 
     "code_review"
 
+)
+    
+
+    builder.add_conditional_edges(
+    "security_review",
+    route_security_review,
+    {
+        "approved": END,
+        "needs_revision": "fix_code_after_security"
+    }
+)
+
+    builder.add_edge(
+    "fix_code_after_security",
+    "security_review"
 )
 
     return builder.compile(
