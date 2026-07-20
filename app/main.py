@@ -153,7 +153,7 @@ def requirements_to_stories(
     "qa_status": result.get("qa_status"),
     "qa_feedback": result.get("qa_feedback"),
     "qa_attempts": result.get("qa_attempts"),
-
+    "deployment_result": result.get("deployment_result"),
 }
 
     except Exception:

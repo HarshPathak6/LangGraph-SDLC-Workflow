@@ -42,6 +42,8 @@ from app.nodes.testing import (
     qa_testing,
     fix_code_after_qa
 )
+
+from app.nodes.deployment import deployment
 # =========================================================
 # ROUTING FUNCTION
 # =========================================================
@@ -233,6 +235,15 @@ def build_graph(checkpointer):
     "fix_code_after_qa",
     fix_code_after_qa
 )
+    
+#---------------------------------------------------
+# DEPLOYMENT PHASE
+#---------------------------------------------------
+
+    builder.add_node(
+    "deployment",
+    deployment
+)
 # ==========================================================
 # START
 # ==========================================================
@@ -351,7 +362,7 @@ def build_graph(checkpointer):
 
     {
 
-        "approved":END,
+        "approved":"deployment",
 
         "needs_revision":"fix_code_after_qa"
 
@@ -382,6 +393,12 @@ def build_graph(checkpointer):
 
 )
     
+    builder.add_edge(
+    "deployment",
+    END
+)
+
+
     return builder.compile(
         checkpointer=checkpointer
     )
