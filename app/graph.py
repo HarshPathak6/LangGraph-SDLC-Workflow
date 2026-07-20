@@ -35,6 +35,13 @@ from app.nodes.development import (
     fix_code_after_security
 )
 
+from app.nodes.testing import (
+    write_test_cases,
+    test_case_review,
+    fix_test_cases,
+    qa_testing,
+    fix_code_after_qa
+)
 # =========================================================
 # ROUTING FUNCTION
 # =========================================================
@@ -86,6 +93,32 @@ def route_security_review(state: SDLCState):
     print("=" * 30)
 
     if status == "APPROVED":
+        return "approved"
+
+    return "needs_revision"
+
+def route_test_case_review(state: SDLCState):
+
+    status = state.get("test_case_review_status", "")
+
+    print("=" * 30)
+    print("TEST CASE REVIEW STATUS:", status)
+    print("=" * 30)
+
+    if status == "APPROVED":
+        return "approved"
+
+    return "needs_revision"
+
+def route_qa_review(state: SDLCState):
+
+    status = state.get("qa_status","")
+
+    print("="*30)
+    print("QA STATUS:",status)
+    print("="*30)
+
+    if status=="APPROVED":
         return "approved"
 
     return "needs_revision"
@@ -171,11 +204,38 @@ def build_graph(checkpointer):
     "fix_code_after_security",
     fix_code_after_security
 )
+    
+#--------------------------------------
+# TESTING PHASE
+#--------------------------------------
 
+    builder.add_node(
+    "write_test_cases",
+    write_test_cases
+)
 
-    # ==========================================================
-    # START
-    # ==========================================================
+    builder.add_node(
+    "test_case_review",
+    test_case_review
+)
+
+    builder.add_node(
+    "fix_test_cases",
+    fix_test_cases
+)
+
+    builder.add_node(
+    "qa_testing",
+    qa_testing
+)
+
+    builder.add_node(
+    "fix_code_after_qa",
+    fix_code_after_qa
+)
+# ==========================================================
+# START
+# ==========================================================
 
     builder.add_edge(
         START,
@@ -269,9 +329,34 @@ def build_graph(checkpointer):
     "security_review",
     route_security_review,
     {
-        "approved": END,
+        "approved": "write_test_cases",
         "needs_revision": "fix_code_after_security"
     }
+)
+    
+    builder.add_conditional_edges(
+    "test_case_review",
+    route_test_case_review,
+    {
+        "approved": "qa_testing",
+        "needs_revision": "fix_test_cases"
+    }
+)
+    
+    builder.add_conditional_edges(
+
+    "qa_testing",
+
+    route_qa_review,
+
+    {
+
+        "approved":END,
+
+        "needs_revision":"fix_code_after_qa"
+
+    }
+
 )
 
     builder.add_edge(
@@ -279,6 +364,24 @@ def build_graph(checkpointer):
     "security_review"
 )
 
+    builder.add_edge(
+    "write_test_cases",
+    "test_case_review"
+)
+    
+    builder.add_edge(
+    "fix_test_cases",
+    "test_case_review"
+)
+    
+    builder.add_edge(
+
+    "fix_code_after_qa",
+
+    "qa_testing"
+
+)
+    
     return builder.compile(
         checkpointer=checkpointer
     )

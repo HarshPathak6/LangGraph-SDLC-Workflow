@@ -46,11 +46,15 @@ class SDLCState(TypedDict, total=False):
     # Testing phase
     test_cases: str
     test_case_review: str
-    test_case_status: str
+    test_case_review_status: str
+    test_case_review_feedback: str
+    test_case_review_attempts: int
 
     # QA phase
     qa_result: str
     qa_status: str
+    qa_feedback: str
+    qa_attempts: int
 
     # Deployment
     deployment_result: str

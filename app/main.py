@@ -142,7 +142,18 @@ def requirements_to_stories(
     "generated_code": result.get("generated_code"),
     "code_review_status": result.get("code_review_status"),
     "code_review_feedback": result.get("code_review_feedback"),
-    "code_review_attempts": result.get("code_review_attempts")
+    "code_review_attempts": result.get("code_review_attempts"),
+    "security_review_status": result.get("security_review_status"),
+    "security_review_feedback": result.get("security_review_feedback"),
+    "security_review_attempts": result.get("security_review_attempts"),
+    "test_cases": result.get("test_cases"),
+    "test_case_review_status": result.get("test_case_review_status"),
+    "test_case_review_feedback": result.get("test_case_review_feedback"),
+    "test_case_review_attempts": result.get("test_case_review_attempts"),
+    "qa_status": result.get("qa_status"),
+    "qa_feedback": result.get("qa_feedback"),
+    "qa_attempts": result.get("qa_attempts"),
+
 }
 
     except Exception:
