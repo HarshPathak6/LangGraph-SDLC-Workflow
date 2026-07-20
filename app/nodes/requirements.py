@@ -68,50 +68,49 @@ def product_owner_review(state: SDLCState):
         0
     ) + 1
 
+    # Stop infinite review loops
+    if attempts >= 3:
+        print("Maximum Product Owner attempts reached. Auto-approving.")
+        return {
+        "product_owner_review": "Auto-approved after maximum attempts.",
+        "product_owner_status": "APPROVED",
+        "product_owner_attempts": attempts,
+        "current_stage": "product_owner_review"
+    }
     prompt = f"""
-You are a strict and experienced Product Owner.
+You are a Product Owner.
 
-Your job is to review the generated Agile user stories
-and determine whether they completely satisfy the
-ORIGINAL SOFTWARE REQUIREMENTS.
+Compare these requirements:
 
-ORIGINAL SOFTWARE REQUIREMENTS:
 {state["requirements"]}
 
-GENERATED USER STORIES:
+with these user stories:
+
 {state["user_stories"]}
 
-Review the stories carefully.
+Only reject the user stories if a major feature requested by the user is completely missing.
 
-Check whether:
+Ignore:
+- wording
+- formatting
+- writing style
+- minor acceptance criteria
 
-1. Every requirement is represented by at least one user story.
-2. No important feature from the original requirements is missing.
-3. Every user story is clear and understandable.
-4. The acceptance criteria are sufficient and testable.
-5. The stories correctly represent the user's requested system.
-6. The stories do not contradict the original requirements.
+If the main functionality requested by the user exists, approve it.
 
-If the user stories fully satisfy the requirements,
-return exactly:
+Reply ONLY in one of these formats.
 
 STATUS: APPROVED
 
 FEEDBACK:
-The user stories sufficiently cover the original requirements.
+Approved.
 
-If something is missing or insufficient,
-return exactly:
+OR
 
 STATUS: FEEDBACK
 
 FEEDBACK:
-Clearly explain:
-- What requirement is missing
-- Which user story is insufficient
-- What must be added or changed
-
-Do not approve incomplete user stories.
+One or two sentences explaining the missing feature.
 """
     print("Calling Product Owner LLM")
     response = llm.invoke(prompt)

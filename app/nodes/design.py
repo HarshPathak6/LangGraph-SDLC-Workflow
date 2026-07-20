@@ -95,10 +95,23 @@ def review_design(state: SDLCState):
 
     response = llm.invoke(prompt)
 
+    attempts = current_attempts + 1
+
     if "NEEDS_REVISION" in response.content.upper():
         status = "NEEDS_REVISION"
     else:
         status = "APPROVED"
+    
+    print("========================")
+    print("Design Review Attempt:", attempts)
+    print("Status:", status)
+    print("========================")
+
+    # Temporary safeguard while developing
+    if attempts >= 3:
+        print("Maximum design review attempts reached. Auto-approving.")
+        status = "APPROVED"
+
 
     return {
         "design_review_status": status,

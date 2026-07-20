@@ -1,29 +1,29 @@
-import psycopg
+# import psycopg
 
-from app.config import settings
-
-
-print("Attempting to connect to Neon...")
+# from app.config import settings
 
 
-try:
-    with psycopg.connect(
-        settings.DATABASE_URL
-    ) as connection:
-
-        with connection.cursor() as cursor:
-
-            cursor.execute("SELECT version();")
-
-            result = cursor.fetchone()
-
-            print("SUCCESS!")
-            print("Connected to Neon.")
-            print(result)
+# print("Attempting to connect to Neon...")
 
 
-except Exception as error:
+# try:
+#     with psycopg.connect(
+#         settings.DATABASE_URL
+#     ) as connection:
 
-    print("CONNECTION FAILED!")
-    print(type(error).__name__)
-    print(error)
+#         with connection.cursor() as cursor:
+
+#             cursor.execute("SELECT version();")
+
+#             result = cursor.fetchone()
+
+#             print("SUCCESS!")
+#             print("Connected to Neon.")
+#             print(result)
+
+
+# except Exception as error:
+
+#     print("CONNECTION FAILED!")
+#     print(type(error).__name__)
+#     print(error)

@@ -33,7 +33,9 @@ class SDLCState(TypedDict, total=False):
     # Development phase
     generated_code: str
     code_review: str
-    code_status: str
+    code_review_status: str
+    code_review_feedback: str
+    code_review_attempts: int
 
     # Security phase
     security_review: str

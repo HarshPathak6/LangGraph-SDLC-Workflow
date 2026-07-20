@@ -139,7 +139,10 @@ def requirements_to_stories(
     "product_owner_review": result.get("product_owner_review"),
     "product_owner_attempts": result.get("product_owner_attempts"),
     "design_docs": result.get("design_docs"),
-    "generated_code": result.get("generated_code")
+    "generated_code": result.get("generated_code"),
+    "code_review_status": result.get("code_review_status"),
+    "code_review_feedback": result.get("code_review_feedback"),
+    "code_review_attempts": result.get("code_review_attempts")
 }
 
     except Exception:

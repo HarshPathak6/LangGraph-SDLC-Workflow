@@ -27,22 +27,39 @@ from app.nodes.design import (
     revise_design_docs
 )
 
-from app.nodes.development import generate_code
+from app.nodes.development import generate_code, code_review, fix_code_after_review
 
 # =========================================================
 # ROUTING FUNCTION
 # =========================================================
 
 def route_product_owner_review(state: SDLCState):
+    print("=" * 40)
+    print("PRODUCT OWNER STATUS:", state.get("product_owner_status"))
+    print("=" * 40)
 
     if state["product_owner_status"] == "APPROVED":
+        print("Routing -> create_design_docs")
         return "approved"
-
+    
+    print("Routing -> revise_user_stories")
     return "needs_revision"
 
 def route_design_review(state: SDLCState):
 
+    print("Design Review Status:", state.get("design_review_status"))
+
     if state.get("design_review_status") == "APPROVED":
+        print("Routing to generate_code")
+        return "approved"
+
+    print("Routing to revise_design_docs")
+    return "needs_revision"
+
+def route_code_review(state: SDLCState):
+
+    if state["code_review_status"] == "APPROVED":
+
         return "approved"
 
     return "needs_revision"
@@ -103,6 +120,21 @@ def build_graph(checkpointer):
         generate_code
     )
 
+    builder.add_node(
+
+    "code_review",
+
+    code_review
+
+)
+
+    builder.add_node(
+
+    "fix_code_after_review",
+
+    fix_code_after_review
+
+)
     # ==========================================================
     # START
     # ==========================================================
@@ -163,9 +195,38 @@ def build_graph(checkpointer):
     # ==========================================================
 
     builder.add_edge(
-        "generate_code",
-        END
-    )
+
+    "generate_code",
+
+    "code_review"
+
+)
+
+    builder.add_conditional_edges(
+
+    "code_review",
+
+    route_code_review,
+
+    {
+
+        # "approved":"security_review",
+        "approved":END,
+
+
+        "needs_revision":"fix_code_after_review"
+
+    }
+
+)
+
+    builder.add_edge(
+
+    "fix_code_after_review",
+
+    "code_review"
+
+)
 
     return builder.compile(
         checkpointer=checkpointer
